@@ -29,7 +29,7 @@ export default {
         apiKey = env.DEEPSEEK_KEY;
         break;
       case "minimax":
-        apiUrl = "https://api.minimaxi.com/v1/user/balance";
+        apiUrl = "https://www.minimaxi.com/v1/token_plan/remains";
         apiKey = env.MINIMAX_KEY;
         break;
       default:

@@ -1778,11 +1778,12 @@ footer {
         return r.json();
       })
       .then(function(data) {
-        // Worker wraps in data; extract and normalize
+        var providerName = provider || apiProvider;
+        // DeepSeek format: { balance_infos: [...] }
         if (data.balance_infos) {
           var cny = (data.balance_infos || []).find(function(b) { return b.currency === 'CNY'; }) || data.balance_infos[0] || {};
           return {
-            provider: provider || apiProvider,
+            provider: providerName,
             balance: parseFloat(cny.total_balance || cny.topped_up_balance || 0),
             currency: 'CNY',
             today_tokens: 0,
@@ -1792,8 +1793,24 @@ footer {
             timestamp: new Date().toISOString()
           };
         }
+        // MiniMax format: { remain_tokens, total_tokens, used_tokens, ... }
+        if (data.remain_tokens !== undefined || data.total_tokens !== undefined) {
+          var total = data.total_tokens || 0;
+          var remain = data.remain_tokens || 0;
+          var used = total - remain;
+          return {
+            provider: providerName,
+            balance: 0,
+            currency: 'tokens',
+            today_tokens: used > 0 ? Math.round(used / 30) : 0,
+            month_tokens: used,
+            daily_history: [],
+            is_available: true,
+            timestamp: new Date().toISOString()
+          };
+        }
         return {
-          provider: provider || apiProvider,
+          provider: providerName,
           balance: data.balance || 0,
           currency: data.currency || 'CNY',
           today_tokens: data.today_tokens || 0,
