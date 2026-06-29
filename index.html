@@ -1238,6 +1238,17 @@ footer {
       <div class="usage-chart-title" id="usage-chart-title">7-Day Usage Trend</div>
       <canvas class="usage-chart-canvas" id="usage-chart-canvas"></canvas>
     </div>
+
+    <!-- Token Test -->
+    <div class="usage-chart-wrap" style="margin-top:16px;">
+      <div class="usage-chart-title">Token 验证测试</div>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:8px;">
+        <input id="test-token-input" type="text" placeholder="输入 Token..."
+          style="flex:1;background:var(--bg-card);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:0.85rem;font-family:inherit;outline:none;">
+        <button id="test-token-btn" class="usage-refresh-btn">测试</button>
+      </div>
+      <div id="test-token-result" style="margin-top:10px;font-size:0.84rem;color:var(--accent);"></div>
+    </div>
   </div>
 </section>
 
@@ -2213,6 +2224,38 @@ footer {
 
   document.getElementById('usage-fab-popup').addEventListener('click', function(e) {
     e.stopPropagation();
+  });
+
+  // --- Token Test ---
+  document.getElementById('test-token-btn').addEventListener('click', function() {
+    var token = document.getElementById('test-token-input').value.trim();
+    var resultEl = document.getElementById('test-token-result');
+    if (!token) {
+      resultEl.textContent = '请输入 Token';
+      resultEl.style.color = 'var(--usage-warn)';
+      return;
+    }
+    resultEl.textContent = '验证中...';
+    resultEl.style.color = 'var(--text-secondary)';
+    fetch(API_PROXY + '?target=test&token=' + encodeURIComponent(token))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.code === 0) {
+          resultEl.innerHTML = '<span style="color:var(--usage-success);">&#10003; ' + data.msg + '</span><br>' + data.greeting;
+          resultEl.style.color = 'var(--accent)';
+        } else {
+          resultEl.textContent = '✗ ' + (data.msg || '验证失败');
+          resultEl.style.color = 'var(--usage-danger)';
+        }
+      })
+      .catch(function() {
+        resultEl.textContent = '网络请求失败';
+        resultEl.style.color = 'var(--usage-danger)';
+      });
+  });
+
+  document.getElementById('test-token-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') document.getElementById('test-token-btn').click();
   });
 
   // --- Lazy load: start polling when visible ---
