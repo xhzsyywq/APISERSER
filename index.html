@@ -1760,23 +1760,48 @@ footer {
   });
 
   // ============ API Usage Module ============
-  var API_PROXY = 'http://localhost:3456';
-  var API_POLL_INTERVAL = 30000; // 30 seconds
-  var API_ALERT_BALANCE_LOW = 10;   // alert when balance < 10 CNY
+  var API_PROXY = 'https://api-quota-proxy.YOUR-SUBDOMAIN.workers.dev';
+  var API_POLL_INTERVAL = 30000;
+  var API_ALERT_BALANCE_LOW = 10;
   var API_ALERT_BALANCE_CRITICAL = 3;
-  var API_MONTHLY_LIMIT = 5000000;  // 5M tokens monthly budget
+  var API_MONTHLY_LIMIT = 5000000;
   var apiProvider = 'deepseek';
   var apiPollTimer = null;
   var apiCountdownTimer = null;
   var apiCountdownValue = 0;
   var apiLastData = null;
 
-  // --- Fetch from proxy ---
+  // --- Fetch from Cloudflare Worker ---
   function fetchApiUsage(provider) {
-    return fetch(API_PROXY + '/api/usage/' + (provider || apiProvider))
+    return fetch(API_PROXY + '?target=' + (provider || apiProvider))
       .then(function(r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
+      })
+      .then(function(data) {
+        // Worker wraps in data; extract and normalize
+        if (data.balance_infos) {
+          var cny = (data.balance_infos || []).find(function(b) { return b.currency === 'CNY'; }) || data.balance_infos[0] || {};
+          return {
+            provider: provider || apiProvider,
+            balance: parseFloat(cny.total_balance || cny.topped_up_balance || 0),
+            currency: 'CNY',
+            today_tokens: 0,
+            month_tokens: 0,
+            daily_history: [],
+            is_available: data.is_available !== false,
+            timestamp: new Date().toISOString()
+          };
+        }
+        return {
+          provider: provider || apiProvider,
+          balance: data.balance || 0,
+          currency: data.currency || 'CNY',
+          today_tokens: data.today_tokens || 0,
+          month_tokens: data.month_tokens || 0,
+          daily_history: data.daily_history || [],
+          timestamp: new Date().toISOString()
+        };
       });
   }
 
