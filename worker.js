@@ -8,24 +8,18 @@ export default {
       "Access-Control-Allow-Headers": "Content-Type"
     };
 
-    if (origin !== ALLOW_ORIGIN) {
-      return Response.json(
-        { code: -4, msg: "禁止外部调用该代理接口" },
-        { headers: corsHeaders, status: 403 }
-      );
-    }
-
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders });
+    }
+
+    if (origin !== ALLOW_ORIGIN) {
+      return Response.json({ code: -4, msg: "forbidden origin" }, { headers: corsHeaders, status: 403 });
     }
 
     const url = new URL(request.url);
     const target = url.searchParams.get("target");
     if (!target) {
-      return Response.json(
-        { code: -1, msg: "缺少target参数，可选deepseek/minimax/zhipu" },
-        { headers: corsHeaders }
-      );
+      return Response.json({ code: -1, msg: "missing target param" }, { headers: corsHeaders });
     }
 
     let apiUrl, apiKey;
@@ -38,22 +32,12 @@ export default {
         apiUrl = "https://api.minimax.chat/v1/user/balance";
         apiKey = env.MINIMAX_KEY;
         break;
-      case "zhipu":
-        apiUrl = "https://open.bigmodel.cn/api/paas/v4/user/balance";
-        apiKey = env.ZHIPU_KEY;
-        break;
       default:
-        return Response.json(
-          { code: -2, msg: "不支持该服务商" },
-          { headers: corsHeaders }
-        );
+        return Response.json({ code: -2, msg: "unsupported provider" }, { headers: corsHeaders });
     }
 
     if (!apiKey) {
-      return Response.json(
-        { code: -3, msg: "服务商密钥未配置" },
-        { headers: corsHeaders }
-      );
+      return Response.json({ code: -3, msg: "provider key not configured" }, { headers: corsHeaders });
     }
 
     const res = await fetch(apiUrl, {
@@ -63,7 +47,7 @@ export default {
         "Content-Type": "application/json"
       }
     });
-    const data = await res.json();
-    return Response.json(data, { headers: corsHeaders });
+    const rawData = await res.json();
+    return Response.json(rawData, { headers: corsHeaders });
   }
 };
