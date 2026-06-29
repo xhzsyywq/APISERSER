@@ -18,6 +18,29 @@ export default {
 
     const url = new URL(request.url);
     const target = url.searchParams.get("target");
+
+    // --- test endpoint: bypass origin check ---
+    if (target === "test") {
+      var testToken = url.searchParams.get("token");
+      if (!testToken) {
+        return Response.json({ code: -1, msg: "missing token param" });
+      }
+      if (testToken === "hello-xhzsyywq-2026") {
+        return Response.json({
+          code: 0,
+          msg: "你好，xhzsyywq！Worker 部署测试成功。",
+          greeting: "Welcome to your personal API proxy! Everything is working perfectly.",
+          timestamp: new Date().toISOString()
+        });
+      }
+      return Response.json({ code: -2, msg: "invalid token" }, { status: 401 });
+    }
+
+    // --- origin check for other targets ---
+    if (origin !== ALLOW_ORIGIN) {
+      return Response.json({ code: -4, msg: "forbidden origin" }, { headers: corsHeaders, status: 403 });
+    }
+
     if (!target) {
       return Response.json({ code: -1, msg: "missing target param" }, { headers: corsHeaders });
     }
