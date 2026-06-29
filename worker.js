@@ -29,7 +29,7 @@ export default {
         apiKey = env.DEEPSEEK_KEY;
         break;
       case "minimax":
-        apiUrl = "https://api.minimax.chat/v1/user/balance";
+        apiUrl = "https://api.minimaxi.com/v1/user/balance";
         apiKey = env.MINIMAX_KEY;
         break;
       default:
