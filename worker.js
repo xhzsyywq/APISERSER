@@ -1,6 +1,6 @@
 export default {
   async fetch(request, env) {
-    const ALLOW_ORIGIN = "https://YOUR-GITHUB-USERNAME.github.io";
+    const ALLOW_ORIGIN = "https://xhzsyywq.github.io";
     const origin = request.headers.get("origin");
     const corsHeaders = {
       "Access-Control-Allow-Origin": ALLOW_ORIGIN,
